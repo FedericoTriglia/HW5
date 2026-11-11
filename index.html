@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive numerical experiments for Riemann and Lebesgue integration and the standard normal CDF.">
+  <title>Numerical Integration &amp; the Normal CDF — Homework Lab</title>
+  <style>
+    :root {
+      --ink: #172235;
+      --muted: #5a687d;
+      --line: #dce3ec;
+      --paper: #f4f7fb;
+      --card: #ffffff;
+      --navy: #152e50;
+      --blue: #245ea8;
+      --cyan: #dff3f7;
+      --green: #16745a;
+      --amber: #9b5b05;
+      --red: #9c3434;
+      --shadow: 0 12px 34px rgba(21, 46, 80, .08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); line-height: 1.55; }
+    .page { max-width: 1180px; margin: 0 auto; padding: 26px 22px 60px; }
+    .hero {
+      padding: 30px 32px; border-radius: 22px; color: #fff;
+      background: linear-gradient(120deg, #142d4d 0%, #245b8f 62%, #2e8494 100%);
+      box-shadow: var(--shadow); margin-bottom: 24px;
+    }
+    .eyebrow { color: #bde7ef; letter-spacing: .13em; text-transform: uppercase; font-size: .76rem; font-weight: 800; }
+    h1 { margin: 8px 0 9px; font-size: clamp(2rem, 4vw, 3.1rem); line-height: 1.08; letter-spacing: -.04em; }
+    .hero p { max-width: 820px; color: #e3eef8; margin: 0; font-size: 1.02rem; }
+    .hero-tags { display:flex; gap:8px; flex-wrap:wrap; margin-top:18px; }
+    .tag { padding: 5px 10px; border:1px solid rgba(255,255,255,.3); border-radius:999px; font-size:.78rem; color:#f0fbff; }
+    h2 { margin: 34px 0 12px; font-size: 1.72rem; letter-spacing: -.025em; }
+    h3 { margin: 0 0 9px; font-size: 1.1rem; }
+    p { margin: 8px 0 12px; }
+    .lead { color: var(--muted); max-width: 900px; }
+    .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap:16px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:17px; padding:18px; box-shadow:var(--shadow); }
+    .span-12 { grid-column:span 12; }
+    .span-8 { grid-column:span 8; }
+    .span-7 { grid-column:span 7; }
+    .span-6 { grid-column:span 6; }
+    .span-5 { grid-column:span 5; }
+    .span-4 { grid-column:span 4; }
+    .controls { display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:12px; align-items:end; }
+    label { display:block; color:var(--muted); font-size:.82rem; font-weight:700; margin-bottom:5px; }
+    input, select { width:100%; border:1px solid #cbd5e1; border-radius:10px; padding:10px 11px; color:var(--ink); background:#fff; font:inherit; }
+    input:focus, select:focus, button:focus-visible { outline:3px solid rgba(36,94,168,.18); border-color:var(--blue); }
+    button { border:0; border-radius:10px; padding:11px 15px; background:var(--blue); color:#fff; font:inherit; font-weight:750; cursor:pointer; white-space:nowrap; }
+    button:hover { filter:brightness(1.08); }
+    button.secondary { background:#e8eef6; color:var(--navy); border:1px solid var(--line); }
+    .metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px; }
+    .metric { border:1px solid var(--line); border-radius:12px; padding:12px; background:#fbfdff; min-width:0; }
+    .metric .k { color:var(--muted); font-size:.75rem; font-weight:750; text-transform:uppercase; letter-spacing:.06em; }
+    .metric .v { font:700 1.12rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-top:5px; overflow-wrap:anywhere; }
+    .metric .sub { color:var(--muted); font-size:.78rem; margin-top:4px; }
+    .note { border-left:4px solid #4a91a7; padding:10px 13px; background:#f0f8fa; border-radius:0 10px 10px 0; color:#294b5c; font-size:.92rem; }
+    .warn { border-left-color:#c48629; background:#fff8e9; color:#694411; }
+    .danger { border-left-color:#bb5858; background:#fff3f3; color:#6f2828; }
+    .ok { border-left-color:#29916f; background:#eef9f4; color:#1c5e49; }
+    .table-wrap { overflow-x:auto; }
+    table { border-collapse:collapse; width:100%; font-size:.9rem; }
+    th, td { text-align:right; padding:9px 10px; border-bottom:1px solid var(--line); white-space:nowrap; }
+    th { color:#516176; background:#f7f9fc; font-size:.76rem; text-transform:uppercase; letter-spacing:.045em; }
+    th:first-child, td:first-child { text-align:left; }
+    tbody tr:last-child td { border-bottom:0; }
+    .mono { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .small { color:var(--muted); font-size:.84rem; }
+    canvas { width:100%; height:250px; display:block; background:#fbfdff; border:1px solid var(--line); border-radius:12px; }
+    .formula { background:#f7f9fc; border:1px solid var(--line); padding:12px 14px; border-radius:11px; overflow-x:auto; font-family:Georgia, "Times New Roman", serif; font-size:1.02rem; }
+    .method-list { padding-left:20px; margin:7px 0; }
+    .method-list li { margin:5px 0; }
+    .pill { display:inline-block; padding:3px 8px; border-radius:999px; font-size:.74rem; font-weight:800; background:#eaf1fb; color:#244f87; }
+    .pill.green { background:#e8f6ef; color:#176347; }
+    .pill.orange { background:#fff2dc; color:#87520c; }
+    .footer { margin-top:36px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; }
+    a { color:#1d5a9b; text-decoration-thickness:1px; text-underline-offset:2px; }
+    code { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.9em; background:#f0f3f8; padding:1px 4px; border-radius:4px; }
+    @media (max-width:900px) {
+      .span-8,.span-7,.span-6,.span-5,.span-4 { grid-column:span 12; }
+      .controls { grid-template-columns:repeat(2,1fr); }
+      .controls .wide { grid-column:span 2; }
+    }
+    @media (max-width:560px) {
+      .page { padding:14px 12px 40px; }
+      .hero { padding:23px 20px; }
+      .controls { grid-template-columns:1fr 1fr; }
+      .controls .wide { grid-column:span 2; }
+      .metrics { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div class="eyebrow">Numerical analysis · interactive homework</div>
+      <h1>Integration from two viewpoints</h1>
+      <p>Compare domain partitions (Riemann sums) with range partitions (Lebesgue-style simple functions), then implement and test numerical methods for the standard normal cumulative distribution function.</p>
+      <div class="hero-tags">
+        <span class="tag">Exercise 1 · Riemann vs Lebesgue</span>
+        <span class="tag">Exercise 2 · Normal CDF</span>
+        <span class="tag">Vanilla HTML + JavaScript</span>
+      </div>
+    </header>
+
+    <section aria-labelledby="es1-title">
+      <h2 id="es1-title">Exercise 1 — Riemann and Lebesgue integration</h2>
+      <p class="lead">The Riemann experiment partitions the <em>x</em>-axis and samples the function at each subinterval midpoint. The Lebesgue-style experiment partitions the <em>y</em>-axis, groups sampled points according to the value bin containing <em>f(x)</em>, and estimates the measure of each preimage from its sample frequency.</p>
+
+      <div class="card span-12">
+        <div class="controls">
+          <div class="wide">
+            <label for="functionSelect">Function</label>
+            <select id="functionSelect">
+              <option value="sin">sin(x), x ∈ [0, π]</option>
+              <option value="square">x², x ∈ [0, 1]</option>
+              <option value="step13">1 for x &lt; 0.5; 3 otherwise</option>
+              <option value="absolute">|x − 0.5|, x ∈ [0, 1]</option>
+              <option value="improper">1 / √x, x ∈ (0, 1] (improper)</option>
+              <option value="indicator">1 for x &lt; 0.5; 0 otherwise</option>
+              <option value="sinc">sin(x) / x, x ∈ [0, π], f(0)=1</option>
+              <option value="thomae">Thomae's function, x ∈ [0, 1]</option>
+              <option value="dirichlet">Dirichlet function, x ∈ [0, 1]</option>
+            </select>
+          </div>
+          <div>
+            <label for="nInput">Domain samples N</label>
+            <input id="nInput" type="number" min="50" max="200000" step="50" value="10000">
+          </div>
+          <div>
+            <label for="binsInput">Range bins B</label>
+            <input id="binsInput" type="number" min="20" max="20000" step="20" value="2000">
+          </div>
+          <div>
+            <label for="capInput">Range cap (unbounded only)</label>
+            <input id="capInput" type="number" min="2" max="256" step="2" value="32" disabled>
+          </div>
+          <div><button id="runIntegral">Recompute</button></div>
+        </div>
+        <div id="functionDescription" class="small" style="margin-top:12px"></div>
+        <div class="metrics" aria-live="polite">
+          <div class="metric">
+            <div class="k">Midpoint Riemann sum</div>
+            <div class="v" id="riemannValue">—</div>
+            <div class="sub" id="riemannError">—</div>
+          </div>
+          <div class="metric">
+            <div class="k">Lebesgue-style histogram</div>
+            <div class="v" id="lebesgueValue">—</div>
+            <div class="sub" id="lebesgueBand">—</div>
+          </div>
+          <div class="metric">
+            <div class="k">Analytical / theoretical value</div>
+            <div class="v" id="exactValue">—</div>
+            <div class="sub" id="exactNote">—</div>
+          </div>
+        </div>
+        <div id="specialNote" class="note" style="margin-top:14px" aria-live="polite"></div>
+      </div>
+
+      <div class="grid" style="margin-top:16px">
+        <div class="card span-7">
+          <h3>Function sampled on the domain</h3>
+          <canvas id="functionPlot" width="900" height="300" aria-label="Plot of the selected function"></canvas>
+          <p class="small" id="plotCaption">The plot is a finite-grid visualization. This matters for pathological functions.</p>
+        </div>
+        <div class="card span-5">
+          <h3>Convergence as the domain grid is refined</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>N</th><th>Riemann midpoint</th><th>Lebesgue-style</th></tr></thead>
+              <tbody id="convergenceBody"></tbody>
+            </table>
+          </div>
+          <p class="small">The range-bin count B stays fixed at the value selected above. For convergence of the range discretization, B must also increase.</p>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:16px">
+        <div class="card span-6">
+          <h3>Riemann viewpoint</h3>
+          <div class="formula">R<sub>N</sub> = Δx ∑<sub>i=0</sub><sup>N−1</sup> f(a + (i + ½)Δx), &nbsp; Δx=(b−a)/N.</div>
+          <p class="small">The domain is split into small intervals. One representative value is taken from each interval and multiplied by its width.</p>
+        </div>
+        <div class="card span-6">
+          <h3>Lebesgue-style viewpoint</h3>
+          <div class="formula">L<sub>B</sub> ≈ ∑<sub>j=0</sub><sup>B−1</sup> (y<sub>j</sub>+Δy/2) · μ̂({x : f(x) ∈ [y<sub>j</sub>,y<sub>j</sub>+Δy)}).</div>
+          <p class="small">The range is split into value bins. The preimage of each bin is approximated by counting the domain samples whose function values fall into that bin.</p>
+        </div>
+      </div>
+
+      <div class="note warn" style="margin-top:16px">
+        <strong>Important limitation.</strong> This histogram is not an exact algorithm for arbitrary preimage measures: it estimates them from the same finite domain grid. The Dirichlet function is the counterexample. Every finite JavaScript <code>Number</code> is an exact rational number in binary floating-point representation, so a grid-only evaluator sees rational sample points and returns 1. The true Lebesgue integral is nevertheless 0 because the rationals have measure zero. The exact preimage-measure calculation is a mathematical result, not something a finite sampler can discover.
+      </div>
+    </section>
+
+    <section aria-labelledby="es2-title">
+      <h2 id="es2-title">Exercise 2 — Numerical computation of the normal CDF</h2>
+      <p class="lead">For a standard normal random variable, the CDF is the accumulated area under the Gaussian density. The page compares a fixed-cost error-function approximation, composite Simpson integration, and the power series derived by term-by-term integration.</p>
+
+      <div class="card">
+        <div class="grid">
+          <div class="span-5">
+            <h3>Definition and special-function identity</h3>
+            <div class="formula">Φ(z) = (1/√(2π)) ∫<sub>−∞</sub><sup>z</sup> e<sup>−t²/2</sup> dt</div>
+            <div class="formula" style="margin-top:9px">Φ(z) = ½ [1 + erf(z/√2)] = ½ erfc(−z/√2)</div>
+            <p class="small">The identity is exact. The numerical implementation below approximates <code>erf</code>/<code>erfc</code> rather than replacing the special function with an elementary antiderivative.</p>
+          </div>
+          <div class="span-7">
+            <h3>Evaluate all three implementations</h3>
+            <div class="controls" style="grid-template-columns:1fr auto">
+              <div><label for="zInput">Input z</label><input id="zInput" type="number" min="-8" max="8" step="0.1" value="1.5"></div>
+              <div><button id="runCdf">Evaluate CDF</button></div>
+            </div>
+            <div class="metrics">
+              <div class="metric"><div class="k">A&amp;S erf approximation</div><div class="v" id="cdfFast">—</div><div class="sub">Fixed number of operations</div></div>
+              <div class="metric"><div class="k">Simpson, n = 256</div><div class="v" id="cdfSimpson">—</div><div class="sub">Composite quadrature</div></div>
+              <div class="metric"><div class="k">Power series</div><div class="v" id="cdfSeries">—</div><div class="sub" id="cdfSeriesTerms">—</div></div>
+            </div>
+            <div class="small" id="cdfStatus" style="margin-top:10px" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:16px">
+        <div class="card span-8">
+          <h3>Comparison with published normal-CDF values</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>z</th><th>A&amp;S erf</th><th>Simpson (256)</th><th>Power series</th><th>NIST table</th></tr></thead>
+              <tbody id="cdfTableBody"></tbody>
+            </table>
+          </div>
+          <p class="small">NIST publishes the standard-normal table to five decimal places. The independent SciPy documentation gives ndtr(0.5) = 0.6914624612740131, which is a higher-precision check at z = 0.5.</p>
+        </div>
+        <div class="card span-4">
+          <h3>Browser timing test</h3>
+          <p class="small">Run a batch of evaluations to compare the relative cost on this browser and device. Timings are machine-dependent and should not be copied as universal performance figures.</p>
+          <button id="benchmarkButton" class="secondary">Benchmark methods</button>
+          <div id="benchmarkResults" class="small" style="margin-top:12px" aria-live="polite">No benchmark run yet.</div>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:16px">
+        <div class="card span-6">
+          <h3>Method 1 — Composite Simpson rule</h3>
+          <div class="formula">Φ(z) = ½ + sgn(z) ∫<sub>0</sub><sup>|z|</sup> φ(t) dt, &nbsp; φ(t)=e<sup>−t²/2</sup>/√(2π).</div>
+          <p class="small">With an even number n of subintervals, Simpson's rule has global error O(h⁴) for a sufficiently smooth integrand. It is accurate but each evaluation requires O(n) density evaluations.</p>
+        </div>
+        <div class="card span-6">
+          <h3>Method 2 — Integrated power series</h3>
+          <div class="formula">Φ(z) = ½ + (1/√(2π)) ∑<sub>k=0</sub><sup>∞</sup> (−1)<sup>k</sup> z<sup>2k+1</sup> / [2<sup>k</sup>(2k+1)k!].</div>
+          <p class="small">The implementation uses a recurrence between consecutive terms and stops when the terms are small after the sequence has started decreasing. It is excellent for moderate |z|, but cancellation makes a direct series less attractive in the far tails.</p>
+        </div>
+        <div class="card span-12">
+          <h3>Method 3 — Abramowitz–Stegun 7.1.26 error-function approximation</h3>
+          <div class="formula">erfc(x) ≈ e<sup>−x²</sup> · t(a₁ + t(a₂ + t(a₃ + t(a₄ + t a₅)))), &nbsp; t=(1+px)<sup>−1</sup>, &nbsp; x≥0.</div>
+          <p class="small">The constants are p = 0.3275911, a₁ = 0.254829592, a₂ = −0.284496736, a₃ = 1.421413741, a₄ = −1.453152027, and a₅ = 1.061405429. Abramowitz and Stegun give an absolute error below 1.5 × 10⁻⁷ for the corresponding erf approximation; because Φ uses one half of erfc, the CDF error is at most about 7.5 × 10⁻⁸. For negative z the implementation evaluates the small positive tail directly, avoiding avoidable cancellation.</p>
+        </div>
+      </div>
+      <div class="note" style="margin-top:16px">
+        <strong>Why no elementary antiderivative?</strong> Liouville's theorem on elementary integration implies that an elementary primitive of e<sup>−x²/2</sup> would require a rational function R satisfying R′ − xR = 1. A rational solution cannot have a pole (the derivative would create a higher-order pole), so R would have to be a polynomial; but then −xR has degree one higher than R and cannot combine with R′ to give the constant 1. Thus no such elementary primitive exists. The error function is introduced precisely to name this non-elementary integral.
+      </div>
+    </section>
+
+    <section aria-labelledby="pdf-title">
+      <h2 id="pdf-title">PDF report — HW5.pdf</h2>
+      <p class="lead">The complete theoretical report is available below. You can read it directly on this page or open it in a separate browser tab.</p>
+      <div class="card span-12" style="padding:12px">
+        <iframe
+          src="HW5.pdf"
+          title="HW5 PDF report"
+          width="100%"
+          height="900"
+          style="display:block;width:100%;height:min(85vh, 1000px);min-height:600px;border:1px solid var(--line);border-radius:10px;background:#fff"
+          loading="lazy">
+          <p>Your browser cannot display embedded PDFs. <a href="HW5.pdf" target="_blank" rel="noopener">Open HW5.pdf</a>.</p>
+        </iframe>
+        <p class="small" style="margin:10px 4px 2px">Having trouble viewing the document? <a href="HW5.pdf" target="_blank" rel="noopener">Open or download HW5.pdf</a>.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <strong>References used for verification</strong>
+      <ol>
+        <li><a href="https://faculty.etsu.edu/gardnerr/4047/notes-Hogg-McKean-Craig/Hogg-McKean-Craig-3-4.pdf" target="_blank" rel="noopener">Hogg, McKean &amp; Craig, Section 3.4 — The Normal Distribution</a>, especially pp. 5–6: elementary antiderivative issue, power series, symmetry, and definition of Φ.</li>
+        <li><a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda3671.htm" target="_blank" rel="noopener">NIST/SEMATECH e-Handbook — Standard Normal CDF table</a>, including the symmetry rule and tabulated values.</li>
+        <li><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.ndtr.html" target="_blank" rel="noopener">SciPy documentation — scipy.special.ndtr</a>, definition and numerical examples for the standard normal CDF.</li>
+        <li><a href="https://digital.library.unt.edu/ark:/67531/metadc40302/m1/315/ocr/" target="_blank" rel="noopener">Abramowitz &amp; Stegun, Handbook of Mathematical Functions</a>, p. 299, formula 7.1.26 for erf and its error bound.</li>
+        <li><a href="https://ksda.ccny.cuny.edu/PostedPapers/liouv06.pdf" target="_blank" rel="noopener">R. C. Churchill, Liouville's Theorem on Integration in Terms of Elementary Functions</a>, differential-algebra background.</li>
+      </ol>
+      <p>The file is self-contained: all numerical code is in the script tag below, with no external JavaScript libraries required.</p>
+    </footer>
+  </main>
+
+  <script>
+    "use strict";
+
+    // ---------- Exercise 1: Riemann sums and range-bin (Lebesgue-style) sums ----------
+    const SQRT2 = Math.sqrt(2);
+    const SQRT2PI = Math.sqrt(2 * Math.PI);
+    const sinc = x => Math.abs(x) < 1e-14 ? 1 : Math.sin(x) / x;
+
+    function gcd(a, b) {
+      while (b !== 0) { const r = a % b; a = b; b = r; }
+      return Math.abs(a);
+    }
+
+    const functionSpecs = {
+      sin: {
+        name: "f(x) = sin(x)", a: 0, b: Math.PI, range: [0, 1], exact: 2,
+        description: "Continuous and bounded. Exact integral: ∫₀^π sin(x) dx = 2.",
+        f: x => Math.sin(x)
+      },
+      square: {
+        name: "f(x) = x²", a: 0, b: 1, range: [0, 1], exact: 1 / 3,
+        description: "Continuous and bounded. Exact integral: ∫₀¹ x² dx = 1/3.",
+        f: x => x * x
+      },
+      step13: {
+        name: "f(x) = 1 (x < 0.5), 3 (x ≥ 0.5)", a: 0, b: 1, range: [1, 3], exact: 2,
+        description: "A bounded step function with one discontinuity. Exact integral: 1·0.5 + 3·0.5 = 2.",
+        f: x => x < 0.5 ? 1 : 3
+      },
+      absolute: {
+        name: "f(x) = |x − 0.5|", a: 0, b: 1, range: [0, 0.5], exact: 0.25,
+        description: "Continuous, with a corner at x = 0.5. Exact integral is the area of two triangles: 1/4.",
+        f: x => Math.abs(x - 0.5)
+      },
+      improper: {
+        name: "f(x) = 1/√x", a: 0, b: 1, range: [0, null], exact: 2,
+        unbounded: true,
+        description: "Unbounded at x = 0. Its improper Riemann integral and Lebesgue integral both equal 2. The histogram must cap the range at Ymax; the discarded tail integral is exactly 1/Ymax.",
+        f: x => 1 / Math.sqrt(x)
+      },
+      indicator: {
+        name: "f(x) = 1 (x < 0.5), 0 (x ≥ 0.5)", a: 0, b: 1, range: [0, 1], exact: 0.5,
+        description: "A bounded indicator of [0, 0.5). Exact integral equals the measure of that interval: 1/2.",
+        f: x => x < 0.5 ? 1 : 0
+      },
+      sinc: {
+        name: "f(x) = sin(x)/x", a: 0, b: Math.PI, range: [0, 1], exact: 1.851937051982466,
+        description: "Define f(0) = 1 by continuity. The exact integral is the sine integral Si(π) ≈ 1.851937051982466.",
+        f: sinc
+      },
+      thomae: {
+        name: "Thomae's function", a: 0, b: 1, range: [0, 1], exact: 0,
+        description: "T(p/q) = 1/q in lowest terms and T(x) = 0 for irrational x. It is Riemann-integrable, despite being discontinuous at every rational; its integral is 0.",
+        // At the i-th midpoint, x=(2i+1)/(2N). Evaluate this rational exactly by reducing its fraction.
+        sampleAtIndex: (i, n) => {
+          const numerator = 2 * i + 1;
+          const denominator = 2 * n;
+          return 1 / (denominator / gcd(numerator, denominator));
+        },
+        f: x => 0
+      },
+      dirichlet: {
+        name: "Dirichlet function", a: 0, b: 1, range: [0, 1], exact: 0,
+        noRiemann: true,
+        description: "D(x) = 1 for rational x and 0 for irrational x. It is not Riemann-integrable; it is Lebesgue-integrable with integral 0 because Q has measure zero.",
+        // A finite IEEE-754 binary64 number is rational. Thus every machine sample belongs to Q.
+        sampleAtIndex: () => 1,
+        f: x => 1
+      }
+    };
+
+    const $ = id => document.getElementById(id);
+    const fmt = (x, digits = 10) => Number.isFinite(x) ? x.toFixed(digits) : String(x);
+
+    function sampleValues(spec, n) {
+      const dx = (spec.b - spec.a) / n;
+      const values = new Array(n);
+      for (let i = 0; i < n; i++) {
+        const x = spec.a + (i + 0.5) * dx;
+        values[i] = spec.sampleAtIndex ? spec.sampleAtIndex(i, n, x) : spec.f(x);
+      }
+      return values;
+    }
+
+    function riemannFromValues(values, spec) {
+      const dx = (spec.b - spec.a) / values.length;
+      let sum = 0;
+      for (let i = 0; i < values.length; i++) sum += values[i];
+      return sum * dx;
+    }
+
+    function lebesgueHistogram(values, spec, bins, rangeMaxOverride) {
+      const yMin = spec.range[0];
+      const yMax = spec.unbounded ? rangeMaxOverride : spec.range[1];
+      const dy = (yMax - yMin) / bins;
+      const dx = (spec.b - spec.a) / values.length;
+      const counts = new Uint32Array(bins);
+      for (const original of values) {
+        // The unbounded case approximates f_M = min(f, Ymax).
+        const v = Math.min(yMax, Math.max(yMin, original));
+        let j = Math.floor((v - yMin) / dy);
+        if (j < 0) j = 0;
+        if (j >= bins) j = bins - 1;
+        counts[j]++;
+      }
+      let lower = 0, middle = 0, upper = 0;
+      for (let j = 0; j < bins; j++) {
+        const measureEstimate = counts[j] * dx;
+        const left = yMin + j * dy;
+        lower += left * measureEstimate;
+        middle += (left + dy / 2) * measureEstimate;
+        upper += (left + dy) * measureEstimate;
+      }
+      return { lower, middle, upper, dy, yMax };
+    }
+
+    function calculateIntegral(spec, n, bins, cap) {
+      const values = sampleValues(spec, n);
+      const riemann = riemannFromValues(values, spec);
+      const hist = lebesgueHistogram(values, spec, bins, cap);
+      return { values, riemann, hist };
+    }
+
+    function drawFunctionPlot(spec, cap) {
+      const canvas = $("functionPlot");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      const pad = { l: 58, r: 18, t: 18, b: 38 };
+      const yMax = spec.unbounded ? cap : spec.range[1];
+      const yMin = spec.range[0];
+      const plotW = w - pad.l - pad.r, plotH = h - pad.t - pad.b;
+      ctx.strokeStyle = "#dce3ec"; ctx.lineWidth = 1;
+      for (let j = 0; j <= 4; j++) {
+        const y = pad.t + plotH * j / 4;
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+        const val = yMax - (yMax - yMin) * j / 4;
+        ctx.fillStyle = "#64748b"; ctx.font = "12px sans-serif"; ctx.textAlign = "right";
+        ctx.fillText(val.toFixed(2), pad.l - 8, y + 4);
+      }
+      ctx.strokeStyle = "#718096";
+      ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.lineTo(w - pad.r, h - pad.b); ctx.stroke();
+      const points = 600;
+      ctx.strokeStyle = "#2365a5"; ctx.lineWidth = 2.5; ctx.beginPath();
+      for (let i = 0; i < points; i++) {
+        const x = spec.a + i / (points - 1) * (spec.b - spec.a);
+        let v = spec.f(x);
+        if (spec.key === "thomae" || spec.key === "dirichlet") {
+          // Finite floating-point plot samples are rational; mirror the machine-grid observation.
+          v = spec.key === "dirichlet" ? 1 : 0;
+        }
+        v = Math.min(yMax, Math.max(yMin, v));
+        const px = pad.l + i / (points - 1) * plotW;
+        const py = pad.t + (yMax - v) / (yMax - yMin || 1) * plotH;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      ctx.fillStyle = "#64748b"; ctx.font = "12px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("x", pad.l + plotW / 2, h - 8);
+      ctx.save(); ctx.translate(15, pad.t + plotH / 2); ctx.rotate(-Math.PI / 2); ctx.fillText("f(x)", 0, 0); ctx.restore();
+    }
+
+    function runIntegralExperiment() {
+      const key = $("functionSelect").value;
+      const spec = { ...functionSpecs[key], key };
+      const n = Math.max(50, Math.min(200000, Math.floor(Number($("nInput").value) || 10000)));
+      const bins = Math.max(20, Math.min(20000, Math.floor(Number($("binsInput").value) || 2000)));
+      const cap = Math.max(2, Math.min(256, Number($("capInput").value) || 32));
+      $("nInput").value = n; $("binsInput").value = bins; $("capInput").value = cap;
+      $("capInput").disabled = !spec.unbounded;
+      $("functionDescription").textContent = `${spec.description} Domain: [${spec.a.toFixed(3)}, ${spec.b.toFixed(3)}]. N = ${n.toLocaleString()}, B = ${bins.toLocaleString()}.`;
+      const result = calculateIntegral(spec, n, bins, cap);
+      $("riemannValue").textContent = fmt(result.riemann, 10);
+      $("riemannError").textContent = spec.noRiemann ? "Grid value only; no Riemann integral exists." : `Midpoint rule · ${n.toLocaleString()} function samples`;
+      $("lebesgueValue").textContent = fmt(result.hist.middle, 10);
+      $("lebesgueBand").textContent = `Sample-bin band [${fmt(result.hist.lower, 8)}, ${fmt(result.hist.upper, 8)}]; Δy = ${fmt(result.hist.dy, 6)}`;
+
+      if (spec.noRiemann) {
+        $("exactValue").textContent = "0 (Lebesgue)";
+        $("exactNote").textContent = "No Riemann integral; Q has measure 0.";
+      } else if (spec.unbounded) {
+        $("exactValue").textContent = "2";
+        $("exactNote").textContent = `Tail beyond cap ${cap}: 1/${cap} = ${fmt(1 / cap, 8)}.`;
+      } else {
+        $("exactValue").textContent = fmt(spec.exact, 10);
+        $("exactNote").textContent = spec.key === "thomae" ? "Exact integral: 0." : "Analytical value / special-function value.";
+      }
+
+      let note = "For bounded Riemann-integrable functions, refining the domain mesh and the range bins makes both approximations converge to the same integral.";
+      if (spec.unbounded) {
+        note = `The histogram integrates the capped function min(f, ${cap}). For this example, the omitted tail integral is exactly 1/${cap} = ${fmt(1 / cap, 8)}. Increase the cap as well as N and B to approach 2.`;
+      } else if (spec.noRiemann) {
+        note = "The true preimages are D⁻¹({1}) = Q (measure 0) and D⁻¹({0}) = [0,1]\\Q (measure 1), so the exact Lebesgue integral is 0. A finite grid sees only rational binary64 samples and therefore reports 1 (or the top-bin midpoint). This is not a Riemann sum convergence result: the Dirichlet function is not Riemann-integrable.";
+      } else if (spec.key === "thomae") {
+        note = "Thomae's function is Riemann-integrable: for each ε > 0, only finitely many reduced fractions have value at least ε. Its integral is 0, but rational grid points produce small positive sums; convergence can be noticeably slower than for smooth functions.";
+      }
+      $("specialNote").textContent = note;
+      $("specialNote").className = "note" + ((spec.unbounded || spec.noRiemann) ? " warn" : " ok");
+      $("plotCaption").textContent = spec.key === "dirichlet"
+        ? "A finite floating-point plot sees rational sample values only; the picture cannot display the irrational points as a continuum."
+        : spec.key === "thomae"
+          ? "The plot is only a finite-grid sketch; the true function is zero at every irrational number and has rational spikes."
+          : spec.unbounded
+            ? `The vertical axis is capped at ${cap}; the singularity at x = 0 is not drawn as an infinite height.`
+            : "The curve is sampled for display only; the numerical integral uses the N midpoint samples shown above.";
+      drawFunctionPlot(spec, cap);
+
+      const Ns = [100, 1000, 10000];
+      const tbody = $("convergenceBody");
+      tbody.innerHTML = "";
+      for (const nn of Ns) {
+        const part = calculateIntegral(spec, nn, bins, cap);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${nn.toLocaleString()}</td><td class="mono">${fmt(part.riemann, 8)}</td><td class="mono">${fmt(part.hist.middle, 8)}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    // ---------- Exercise 2: normal CDF ----------
+    // Abramowitz & Stegun 7.1.26. The polynomial is evaluated in Horner form.
+    const A1 = 0.254829592, A2 = -0.284496736, A3 = 1.421413741;
+    const A4 = -1.453152027, A5 = 1.061405429, P_ERF = 0.3275911;
+
+    function erfcApproxPositive(x) {
+      if (x === 0) return 1;
+      const t = 1 / (1 + P_ERF * x);
+      const polynomial = (((((A5 * t + A4) * t + A3) * t + A2) * t + A1) * t);
+      return polynomial * Math.exp(-x * x);
+    }
+
+    function normalCDFFast(z) {
+      if (!Number.isFinite(z)) return z === Infinity ? 1 : z === -Infinity ? 0 : NaN;
+      if (z === 0) return 0.5;
+      const tail = 0.5 * erfcApproxPositive(Math.abs(z) / SQRT2);
+      return z > 0 ? 1 - tail : tail;
+    }
+
+    function normalCDFSimpson(z, n = 256) {
+      if (!Number.isFinite(z)) return z === Infinity ? 1 : z === -Infinity ? 0 : NaN;
+      if (z === 0) return 0.5;
+      if (n % 2 !== 0) n++;
+      const a = Math.abs(z), h = a / n;
+      const density = x => Math.exp(-0.5 * x * x) / SQRT2PI;
+      let odd = 0, even = 0;
+      for (let i = 1; i < n; i++) {
+        const value = density(i * h);
+        if (i % 2 === 0) even += value; else odd += value;
+      }
+      const integral = (h / 3) * (density(0) + density(a) + 4 * odd + 2 * even);
+      return z > 0 ? 0.5 + integral : 0.5 - integral;
+    }
+
+    function normalCDFSeries(z, tolerance = 1e-15, maxTerms = 1000) {
+      if (!Number.isFinite(z)) return { value: z === Infinity ? 1 : z === -Infinity ? 0 : NaN, terms: 0 };
+      const x = Math.abs(z);
+      if (x > 3.5) return null; // Avoid severe cancellation in the far tails.
+      if (x === 0) return { value: 0.5, terms: 0 };
+      let term = x, sum = 0, k = 0;
+      const x2 = x * x;
+      while (k < maxTerms) {
+        sum += term;
+        if (k > x2 / 2 && Math.abs(term) < tolerance) break;
+        term *= -x2 * (2 * k + 1) / (2 * (k + 1) * (2 * k + 3));
+        k++;
+      }
+      const positive = 0.5 + sum / SQRT2PI;
+      return { value: z > 0 ? positive : 1 - positive, terms: k + 1 };
+    }
+
+    const nistReferences = [
+      { z: -3.0, ref: 0.00135 },
+      { z: -2.0, ref: 0.02275 },
+      { z: -1.0, ref: 0.15866 },
+      { z: -0.5, ref: 0.30854 },
+      { z: 0.0, ref: 0.50000 },
+      { z: 0.5, ref: 0.69146 },
+      { z: 1.0, ref: 0.84134 },
+      { z: 1.5, ref: 0.93319 },
+      { z: 2.0, ref: 0.97725 },
+      { z: 3.0, ref: 0.99865 }
+    ];
+
+    function updateCdfPoint() {
+      const z = Number($("zInput").value);
+      if (!Number.isFinite(z) || z < -8 || z > 8) {
+        $("cdfStatus").textContent = "Enter a finite z in the interval [−8, 8].";
+        return;
+      }
+      const fast = normalCDFFast(z);
+      const simpson = normalCDFSimpson(z, 256);
+      const series = normalCDFSeries(z);
+      $("cdfFast").textContent = fmt(fast, 12);
+      $("cdfSimpson").textContent = fmt(simpson, 12);
+      $("cdfSeries").textContent = series ? fmt(series.value, 12) : "not used";
+      $("cdfSeriesTerms").textContent = series ? `${series.terms} terms` : "|z| > 3.5: cancellation risk";
+      $("cdfStatus").textContent = `For z = ${z}, the fast method uses the symmetry of the Gaussian and evaluates the smaller tail through erfc. Simpson uses 256 subintervals. The series is deliberately restricted to moderate |z|.`;
+    }
+
+    function populateCdfTable() {
+      const tbody = $("cdfTableBody");
+      tbody.innerHTML = "";
+      for (const item of nistReferences) {
+        const fast = normalCDFFast(item.z);
+        const simpson = normalCDFSimpson(item.z, 256);
+        const series = normalCDFSeries(item.z);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${item.z.toFixed(2)}</td><td class="mono">${fmt(fast, 9)}</td><td class="mono">${fmt(simpson, 9)}</td><td class="mono">${series ? fmt(series.value, 9) : "—"}</td><td class="mono">${item.ref.toFixed(5)}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function benchmarkMethod(label, fn, reps, points) {
+      let checksum = 0;
+      const start = performance.now();
+      for (let r = 0; r < reps; r++) {
+        for (const z of points) checksum += fn(z);
+      }
+      const elapsed = performance.now() - start;
+      return { label, elapsed, checksum };
+    }
+
+    function runBenchmark() {
+      const points = [-3, -2, -1, -0.5, 0, 0.5, 1, 2, 3];
+      const reps = 1200;
+      const fast = benchmarkMethod("A&S erf", normalCDFFast, reps, points);
+      const simpson = benchmarkMethod("Simpson, n=256", z => normalCDFSimpson(z, 256), reps, points);
+      const series = benchmarkMethod("Series", z => normalCDFSeries(z).value, reps, points);
+      const total = reps * points.length;
+      $("benchmarkResults").innerHTML = [fast, simpson, series].map(x =>
+        `<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding:6px 0"><span>${x.label}</span><strong class="mono">${x.elapsed.toFixed(2)} ms</strong></div>`
+      ).join("") + `<p>Each method evaluated ${total.toLocaleString()} values. Checksum: ${series.checksum.toFixed(3)}.</p>`;
+    }
+
+    // Wire controls and perform initial calculations.
+    $("functionSelect").addEventListener("change", runIntegralExperiment);
+    $("runIntegral").addEventListener("click", runIntegralExperiment);
+    $("runCdf").addEventListener("click", updateCdfPoint);
+    $("zInput").addEventListener("keydown", event => { if (event.key === "Enter") updateCdfPoint(); });
+    $("benchmarkButton").addEventListener("click", runBenchmark);
+    $("nInput").addEventListener("keydown", event => { if (event.key === "Enter") runIntegralExperiment(); });
+    $("binsInput").addEventListener("keydown", event => { if (event.key === "Enter") runIntegralExperiment(); });
+    $("capInput").addEventListener("keydown", event => { if (event.key === "Enter") runIntegralExperiment(); });
+
+    runIntegralExperiment();
+    populateCdfTable();
+    updateCdfPoint();
+  </script>
+</body>
+</html>
